@@ -267,6 +267,8 @@ option{background:#1C2537}
 .rank-stat .v{font-family:'Bebas Neue',sans-serif;font-size:20px;line-height:1}
 .rank-stat .v.win{color:#6EE7B7}.rank-stat .v.gold{color:var(--gold)}
 .rank-stat .l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.btn-annul{margin-top:2px;padding:5px 10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#FCA5A5;border-radius:7px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:4px}
+.btn-annul:hover{background:rgba(239,68,68,.2)}
 
 </style>
 </head>
@@ -365,7 +367,7 @@ option{background:#1C2537}
     <div id="tab-simulador" class="hidden">
       <div class="sim-intro">
         <i class="ti ti-info-circle" style="font-size:14px"></i>
-        <span>Elegí <strong>1°, 2° y 3°</strong> de cada grupo. Ganás la apuesta si acertás los tres y tu 3° clasifica entre los <strong>8 mejores terceros</strong>. Cada apuesta cuesta <strong>$20.000</strong> y podés hacer varias por grupo.</span>
+        <span>Elegí <strong>1°, 2° y 3°</strong> de cada grupo. Ganás la apuesta si acertás los tres y tu 3° clasifica entre los <strong>8 mejores terceros</strong>. Cada apuesta cuesta <strong>$20.000</strong> y se permite <strong>una sola por grupo</strong>.</span>
       </div>
       <div id="sim-groups"></div>
     </div>
@@ -925,10 +927,11 @@ function renderSimulator(){
     const teams=teamsOfGroup(g);
     const draft=simDraft[g]||{};
     const myG=getGroupBets().filter(b=>b.group===g);
-    html+=`<div class="sim-card">
+    const alreadyBet=myG.length>0;
+    html+=`<div class="sim-card${alreadyBet?' locked':''}">
       <div class="sim-head">
         <div class="sim-title">Grupo ${g}</div>
-        <div class="sim-colhead"><span>1°</span><span>2°</span><span>3°</span></div>
+        ${alreadyBet?'<span class="sim-locked-msg"><i class="ti ti-lock"></i> Apuesta realizada</span>':'<div class="sim-colhead"><span>1°</span><span>2°</span><span>3°</span></div>'}
       </div>`;
     teams.forEach(t=>{
       html+=`<div class="sim-team">
@@ -937,16 +940,19 @@ function renderSimulator(){
         <div class="sim-picks">
           ${[1,2,3].map(pos=>{
             const sel=draft[pos]===t;
-            return `<button class="sim-box${sel?' sel-'+pos:''}" onclick="simPick('${g}',${pos},'${t.replace(/'/g,"\\'")}')">${sel?pos+'°':''}</button>`;
+            const disabled=alreadyBet?'disabled style="cursor:default"':'';
+            return `<button class="sim-box${sel?' sel-'+pos:''}" ${disabled} onclick="${alreadyBet?'':`simPick('${g}',${pos},'${t.replace(/'/g,"\\'")}')`}">${sel?pos+'°':''}</button>`;
           }).join('')}
         </div>
       </div>`;
     });
-    const complete=draft[1]&&draft[2]&&draft[3];
-    html+=`<div class="sim-foot">
-      <div class="sim-foot-amount">$${fmt(GROUP_BET_AMOUNT)}</div>
-      <button class="btn-sim-bet" id="simbet-${g}" onclick="placeGroupBet('${g}')" ${complete?'':'disabled'}>Apostar grupo ${g}</button>
-    </div>`;
+    if(!alreadyBet){
+      const complete=draft[1]&&draft[2]&&draft[3];
+      html+=`<div class="sim-foot">
+        <div class="sim-foot-amount">$${fmt(GROUP_BET_AMOUNT)}</div>
+        <button class="btn-sim-bet" id="simbet-${g}" onclick="placeGroupBet('${g}')" ${complete?'':'disabled'}>Apostar grupo ${g}</button>
+      </div>`;
+    }
     if(myG.length){
       html+='<div class="sim-existing">';
       myG.forEach(b=>{
@@ -974,9 +980,8 @@ function placeGroupBet(g){
   if(!d[1]||!d[2]||!d[3]){alert('Elegí 1°, 2° y 3° antes de apostar.');return;}
   const u=state.currentUser.user;
   if(!state.groupBets[u])state.groupBets[u]=[];
-  // evitar duplicado exacto
-  const dup=state.groupBets[u].some(b=>b.group===g&&b.primero===d[1]&&b.segundo===d[2]&&b.tercero===d[3]);
-  if(dup){alert('Ya tenés esa misma predicción para el grupo '+g+'.');return;}
+  // una sola apuesta por grupo por usuario
+  if(state.groupBets[u].some(b=>b.group===g)){alert('Ya tenés una apuesta en el Grupo '+g+'. Solo se permite una por grupo.');return;}
   state.groupBets[u].push({id:'gb_'+Date.now(),group:g,primero:d[1],segundo:d[2],tercero:d[3],amount:GROUP_BET_AMOUNT,ts:Date.now()});
   simDraft[g]={};
   saveState();
@@ -1357,25 +1362,78 @@ function renderAdminUsers(){
     </div>`).join('');
 }
 function renderAllBets(){
+  const el=document.getElementById('all-bets-admin');
+  let html='';
+
+  // Apuestas de simulador (por grupo)
+  const grows=[];
+  state.users.forEach(u=>{(state.groupBets[u.user]||[]).forEach(b=>grows.push({user:u.user,b}));});
+  if(grows.length){
+    html+='<div class="admin-title" style="margin-top:0"><i class="ti ti-list-numbers"></i> Simulador de grupos</div>';
+    grows.sort((a,b)=>a.user.localeCompare(b.user)||a.b.group.localeCompare(b.b.group));
+    html+=grows.map(r=>{
+      const ev=evalGroupBet(r.b);
+      const chip=ev==='win'?`<span class="bet-result-chip chip-win">✓ Ganó</span>`:ev==='lose'?`<span class="bet-result-chip chip-lose">✗ Perdió</span>`:`<span class="bet-result-chip chip-pending">Pendiente</span>`;
+      return `<div class="bet-summary-card">
+        <div style="display:flex;align-items:center;gap:10px;flex:1">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(245,197,24,.12);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--gold);flex-shrink:0">${r.b.group}</div>
+          <div style="flex:1">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--blue);text-transform:uppercase;margin-bottom:2px">${r.user}</div>
+            <div class="bet-match-title">Grupo ${r.b.group}</div>
+            <div class="bet-meta">1° ${r.b.primero} · 2° ${r.b.segundo} · 3° ${r.b.tercero}</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <div class="bet-amount-display">$${fmt(r.b.amount)}</div>
+          ${chip}
+          <button class="btn-annul" onclick="annulGroupBet('${r.user.replace(/'/g,"\\'")}','${r.b.id}')"><i class="ti ti-trash"></i> Anular</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Apuestas por partido
   const rows=[];
   state.users.forEach(u=>{Object.values(state.bets[u.user]||{}).forEach(b=>{const m=MATCHES.find(x=>x.id===b.matchId);if(m)rows.push({user:u.user,m,b});});});
-  const el=document.getElementById('all-bets-admin');
-  if(!rows.length){el.innerHTML='<div class="empty-state" style="padding:2rem"><i class="ti ti-calendar-stats"></i><p>Ningún usuario apostó todavía.</p></div>';return;}
-  el.innerHTML=rows.map(r=>{
-    const br=getBetResult(r.m.id,r.b);
-    const chipHtml=br==='win'?`<span class="bet-result-chip chip-win">✓ Ganó</span>`:br==='lose'?`<span class="bet-result-chip chip-lose">✗ Perdió</span>`:`<span class="bet-result-chip chip-pending">Pendiente</span>`;
-    return `<div class="bet-summary-card">
-      <div style="display:flex;align-items:center;gap:10px;flex:1">
-        <div style="width:36px;height:26px;border-radius:3px;overflow:hidden;flex-shrink:0">${flag(r.m.home)}</div>
-        <div style="flex:1">
-          <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--blue);text-transform:uppercase;margin-bottom:2px">${r.user}</div>
-          <div class="bet-match-title">${r.m.home} vs ${r.m.away}</div>
-          <div class="bet-meta">${r.m.phase} · ${r.b.pick}</div>
+  if(rows.length){
+    html+='<div class="admin-title"><i class="ti ti-ball-football"></i> Apuestas por partido</div>';
+    html+=rows.map(r=>{
+      const br=getBetResult(r.m.id,r.b);
+      const chipHtml=br==='win'?`<span class="bet-result-chip chip-win">✓ Ganó</span>`:br==='lose'?`<span class="bet-result-chip chip-lose">✗ Perdió</span>`:`<span class="bet-result-chip chip-pending">Pendiente</span>`;
+      return `<div class="bet-summary-card">
+        <div style="display:flex;align-items:center;gap:10px;flex:1">
+          <div style="width:36px;height:26px;border-radius:3px;overflow:hidden;flex-shrink:0">${flag(r.m.home)}</div>
+          <div style="flex:1">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--blue);text-transform:uppercase;margin-bottom:2px">${r.user}</div>
+            <div class="bet-match-title">${r.m.home} vs ${r.m.away}</div>
+            <div class="bet-meta">${r.m.phase} · ${r.b.pick}</div>
+          </div>
         </div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><div class="bet-amount-display">$${fmt(r.b.amount)}</div>${chipHtml}</div>
-    </div>`;
-  }).join('');
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <div class="bet-amount-display">$${fmt(r.b.amount)}</div>
+          ${chipHtml}
+          <button class="btn-annul" onclick="annulMatchBet('${r.user.replace(/'/g,"\\'")}',${r.m.id})"><i class="ti ti-trash"></i> Anular</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  if(!html)html='<div class="empty-state" style="padding:2rem"><i class="ti ti-calendar-stats"></i><p>Ningún usuario apostó todavía.</p></div>';
+  el.innerHTML=html;
+}
+function annulGroupBet(user,betId){
+  if(!confirm('¿Anular esta apuesta de grupo de '+user+'? Esta acción no se puede deshacer.'))return;
+  if(state.groupBets[user])state.groupBets[user]=state.groupBets[user].filter(b=>b.id!==betId);
+  saveState();
+  renderAllBets();
+  refreshGroupViews();
+}
+function annulMatchBet(user,matchId){
+  if(!confirm('¿Anular esta apuesta por partido de '+user+'? Esta acción no se puede deshacer.'))return;
+  if(state.bets[user])delete state.bets[user][matchId];
+  Object.keys(state.notified).forEach(k=>{if(k.startsWith(user+':'+matchId+':'))delete state.notified[k];});
+  saveState();
+  renderAllBets();
 }
 function addUser(){
   const nu=document.getElementById('new-user').value.trim(),np=document.getElementById('new-pass').value.trim();
