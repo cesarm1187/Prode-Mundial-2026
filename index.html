@@ -1427,6 +1427,7 @@ function annulGroupBet(user,betId){
   saveState();
   renderAllBets();
   refreshGroupViews();
+  if(state.currentUser)updateStats();
 }
 function annulMatchBet(user,matchId){
   if(!confirm('¿Anular esta apuesta por partido de '+user+'? Esta acción no se puede deshacer.'))return;
@@ -1434,6 +1435,7 @@ function annulMatchBet(user,matchId){
   Object.keys(state.notified).forEach(k=>{if(k.startsWith(user+':'+matchId+':'))delete state.notified[k];});
   saveState();
   renderAllBets();
+  if(state.currentUser)updateStats();
 }
 function addUser(){
   const nu=document.getElementById('new-user').value.trim(),np=document.getElementById('new-pass').value.trim();
