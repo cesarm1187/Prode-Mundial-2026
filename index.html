@@ -269,6 +269,8 @@ option{background:#1C2537}
 .rank-stat .l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
 .btn-annul{margin-top:2px;padding:5px 10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#FCA5A5;border-radius:7px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:4px}
 .btn-annul:hover{background:rgba(239,68,68,.2)}
+.bet-blocked{padding:12px 16px;border-top:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:var(--text3);font-style:italic}
+.bet-blocked i{font-size:14px}
 
 </style>
 </head>
@@ -451,8 +453,8 @@ const starsEl=document.getElementById('stars');
 for(let i=0;i<60;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*2+1;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*60}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${2+Math.random()*3}s`;starsEl.appendChild(s);}
 
 const MAX_REGULAR=10;
-const PHASE_LIMITS={'Grupos':5000,'Ronda de 32':5000,'Ronda de 16':5000,'Octavos':10000,'Cuartos':20000,'Semifinales':30000,'3° puesto':40000,'Final':50000};
-const PHASES=['Grupos','Ronda de 32','Ronda de 16','Octavos','Cuartos','Semifinales','3° puesto','Final'];
+const PHASE_LIMITS={'Grupos':5000,'Dieciseisavos':5000,'Octavos':10000,'Cuartos':20000,'Semifinales':30000,'3° puesto':40000,'Final':50000};
+const PHASES=['Grupos','Dieciseisavos','Octavos','Cuartos','Semifinales','3° puesto','Final'];
 
 const FLAG_CODES={
   'México':'mx','Sudáfrica':'za','Corea del Sur':'kr','Rep. Checa':'cz',
@@ -565,47 +567,44 @@ const MATCHES=[
   {id:70, phase:'Grupos',group:'L',date:'23 jun',home:'Panamá',          away:'Croacia',            venue:'Toronto'},
   {id:71, phase:'Grupos',group:'L',date:'27 jun',home:'Panamá',          away:'Inglaterra',         venue:'Nueva York/NJ'},
   {id:72, phase:'Grupos',group:'L',date:'27 jun',home:'Croacia',         away:'Ghana',              venue:'Filadelfia'},
-  // ── RONDA DE 32 ───────────────────────────────
-  {id:73, phase:'Ronda de 32',group:'',date:'28 jun',home:'2° Grupo A',  away:'2° Grupo B',             venue:'Los Ángeles'},
-  {id:74, phase:'Ronda de 32',group:'',date:'29 jun',home:'1° Grupo E',  away:'3° mejor(A/B/C/D/F)',    venue:'Boston'},
-  {id:75, phase:'Ronda de 32',group:'',date:'29 jun',home:'1° Grupo F',  away:'2° Grupo C',             venue:'Guadalajara'},
-  {id:76, phase:'Ronda de 32',group:'',date:'30 jun',home:'2° Grupo E',  away:'2° Grupo I',             venue:'Dallas'},
-  {id:77, phase:'Ronda de 32',group:'',date:'30 jun',home:'1° Grupo I',  away:'3° mejor(C/D/F/G/H)',    venue:'Nueva York/NJ'},
-  {id:78, phase:'Ronda de 32',group:'',date:'30 jun',home:'1° Grupo A',  away:'3° mejor(C/E/F/H/I)',    venue:'Ciudad de México'},
-  {id:79, phase:'Ronda de 32',group:'',date:'1 jul', home:'1° Grupo L',  away:'3° mejor(E/H/I/J/K)',    venue:'Atlanta'},
-  {id:80, phase:'Ronda de 32',group:'',date:'1 jul', home:'1° Grupo G',  away:'3° mejor(A/E/H/I/J)',    venue:'Seattle'},
-  {id:81, phase:'Ronda de 32',group:'',date:'1 jul', home:'1° Grupo D',  away:'3° mejor(B/E/F/I/J)',    venue:'San Francisco'},
-  {id:82, phase:'Ronda de 32',group:'',date:'2 jul', home:'1° Grupo H',  away:'2° Grupo J',             venue:'Los Ángeles'},
-  {id:83, phase:'Ronda de 32',group:'',date:'2 jul', home:'2° Grupo K',  away:'2° Grupo L',             venue:'Toronto'},
-  {id:84, phase:'Ronda de 32',group:'',date:'2 jul', home:'1° Grupo B',  away:'3° mejor(E/F/G/I/J)',    venue:'Vancouver'},
-  {id:85, phase:'Ronda de 32',group:'',date:'3 jul', home:'2° Grupo D',  away:'2° Grupo G',             venue:'Dallas'},
-  {id:86, phase:'Ronda de 32',group:'',date:'3 jul', home:'1° Grupo J',  away:'2° Grupo H',             venue:'Miami'},
-  {id:87, phase:'Ronda de 32',group:'',date:'3 jul', home:'1° Grupo K',  away:'3° mejor(D/E/I/J/L)',    venue:'Kansas City'},
-  {id:88, phase:'Ronda de 32',group:'',date:'4 jul', home:'1° Grupo C',  away:'2° Grupo F',             venue:'Houston'},
-  // ── RONDA DE 16 ───────────────────────────────
-  {id:89, phase:'Ronda de 16',group:'',date:'5 jul', home:'Ganador R32-1', away:'Ganador R32-2',  venue:'Houston'},
-  {id:90, phase:'Ronda de 16',group:'',date:'5 jul', home:'Ganador R32-3', away:'Ganador R32-4',  venue:'Filadelfia'},
-  {id:91, phase:'Ronda de 16',group:'',date:'6 jul', home:'Ganador R32-5', away:'Ganador R32-6',  venue:'Nueva York/NJ'},
-  {id:92, phase:'Ronda de 16',group:'',date:'6 jul', home:'Ganador R32-7', away:'Ganador R32-8',  venue:'Ciudad de México'},
-  {id:93, phase:'Ronda de 16',group:'',date:'7 jul', home:'Ganador R32-9', away:'Ganador R32-10', venue:'Dallas'},
-  {id:94, phase:'Ronda de 16',group:'',date:'7 jul', home:'Ganador R32-11',away:'Ganador R32-12', venue:'Seattle'},
-  {id:95, phase:'Ronda de 16',group:'',date:'8 jul', home:'Ganador R32-13',away:'Ganador R32-14', venue:'Atlanta'},
-  {id:96, phase:'Ronda de 16',group:'',date:'8 jul', home:'Ganador R32-15',away:'Ganador R32-16', venue:'Vancouver'},
-  // ── OCTAVOS ───────────────────────────────────
-  {id:97, phase:'Octavos',group:'',date:'9 jul',  home:'Ganador R16-1', away:'Ganador R16-2', venue:'Boston'},
-  {id:98, phase:'Octavos',group:'',date:'10 jul', home:'Ganador R16-3', away:'Ganador R16-4', venue:'Los Ángeles'},
-  {id:99, phase:'Octavos',group:'',date:'11 jul', home:'Ganador R16-5', away:'Ganador R16-6', venue:'Miami'},
-  {id:100,phase:'Octavos',group:'',date:'11 jul', home:'Ganador R16-7', away:'Ganador R16-8', venue:'Kansas City'},
-  // ── CUARTOS ───────────────────────────────────
-  {id:101,phase:'Cuartos',group:'',date:'14 jul',home:'Ganador Oct-1', away:'Ganador Oct-2', venue:'Dallas'},
-  {id:102,phase:'Cuartos',group:'',date:'15 jul',home:'Ganador Oct-3', away:'Ganador Oct-4', venue:'Atlanta'},
-  // ── SEMIFINALES ───────────────────────────────
-  {id:103,phase:'Semifinales',group:'',date:'14 jul',home:'Ganador CF-1',away:'Ganador CF-2', venue:'Dallas'},
-  {id:104,phase:'Semifinales',group:'',date:'15 jul',home:'Ganador CF-3',away:'Ganador CF-4', venue:'Atlanta'},
-  // ── 3° PUESTO ─────────────────────────────────
-  {id:105,phase:'3° puesto',group:'',date:'18 jul',home:'Perdedor SF-1',away:'Perdedor SF-2', venue:'Miami'},
-  // ── FINAL ─────────────────────────────────────
-  {id:106,phase:'Final',group:'',date:'19 jul',home:'Ganador SF-1',  away:'Ganador SF-2',    venue:'Nueva York/NJ'},
+  // ── DIECISEISAVOS DE FINAL (Round of 32) — 16 partidos ──
+  {id:73, phase:'Dieciseisavos',group:'',date:'28 jun',home:'2° Grupo A',  away:'2° Grupo B',          venue:'Los Ángeles'},
+  {id:74, phase:'Dieciseisavos',group:'',date:'29 jun',home:'1° Grupo E',  away:'3° mejor(A/B/C/D/F)', venue:'Boston'},
+  {id:75, phase:'Dieciseisavos',group:'',date:'29 jun',home:'1° Grupo F',  away:'2° Grupo C',          venue:'Guadalajara'},
+  {id:76, phase:'Dieciseisavos',group:'',date:'30 jun',home:'2° Grupo E',  away:'2° Grupo I',          venue:'Dallas'},
+  {id:77, phase:'Dieciseisavos',group:'',date:'30 jun',home:'1° Grupo I',  away:'3° mejor(C/D/F/G/H)', venue:'Nueva York/NJ'},
+  {id:78, phase:'Dieciseisavos',group:'',date:'30 jun',home:'1° Grupo A',  away:'3° mejor(C/E/F/H/I)', venue:'Ciudad de México'},
+  {id:79, phase:'Dieciseisavos',group:'',date:'1 jul', home:'1° Grupo L',  away:'3° mejor(E/H/I/J/K)', venue:'Atlanta'},
+  {id:80, phase:'Dieciseisavos',group:'',date:'1 jul', home:'1° Grupo G',  away:'3° mejor(A/E/H/I/J)', venue:'Seattle'},
+  {id:81, phase:'Dieciseisavos',group:'',date:'1 jul', home:'1° Grupo D',  away:'3° mejor(B/E/F/I/J)', venue:'San Francisco'},
+  {id:82, phase:'Dieciseisavos',group:'',date:'2 jul', home:'1° Grupo H',  away:'2° Grupo J',          venue:'Los Ángeles'},
+  {id:83, phase:'Dieciseisavos',group:'',date:'2 jul', home:'2° Grupo K',  away:'2° Grupo L',          venue:'Toronto'},
+  {id:84, phase:'Dieciseisavos',group:'',date:'2 jul', home:'1° Grupo B',  away:'3° mejor(E/F/G/I/J)', venue:'Vancouver'},
+  {id:85, phase:'Dieciseisavos',group:'',date:'3 jul', home:'2° Grupo D',  away:'2° Grupo G',          venue:'Dallas'},
+  {id:86, phase:'Dieciseisavos',group:'',date:'3 jul', home:'1° Grupo J',  away:'2° Grupo H',          venue:'Miami'},
+  {id:87, phase:'Dieciseisavos',group:'',date:'3 jul', home:'1° Grupo K',  away:'3° mejor(D/E/I/J/L)', venue:'Kansas City'},
+  {id:88, phase:'Dieciseisavos',group:'',date:'4 jul', home:'1° Grupo C',  away:'2° Grupo F',          venue:'Houston'},
+  // ── OCTAVOS DE FINAL (Round of 16) — 8 partidos ──
+  {id:89, phase:'Octavos',group:'',date:'4 jul', home:'Ganador 16avos-1', away:'Ganador 16avos-2',  venue:'Houston'},
+  {id:90, phase:'Octavos',group:'',date:'5 jul', home:'Ganador 16avos-3', away:'Ganador 16avos-4',  venue:'Filadelfia'},
+  {id:91, phase:'Octavos',group:'',date:'5 jul', home:'Ganador 16avos-5', away:'Ganador 16avos-6',  venue:'Nueva York/NJ'},
+  {id:92, phase:'Octavos',group:'',date:'5 jul', home:'Ganador 16avos-7', away:'Ganador 16avos-8',  venue:'Ciudad de México'},
+  {id:93, phase:'Octavos',group:'',date:'6 jul', home:'Ganador 16avos-9', away:'Ganador 16avos-10', venue:'Dallas'},
+  {id:94, phase:'Octavos',group:'',date:'6 jul', home:'Ganador 16avos-11',away:'Ganador 16avos-12', venue:'Seattle'},
+  {id:95, phase:'Octavos',group:'',date:'7 jul', home:'Ganador 16avos-13',away:'Ganador 16avos-14', venue:'Atlanta'},
+  {id:96, phase:'Octavos',group:'',date:'7 jul', home:'Ganador 16avos-15',away:'Ganador 16avos-16', venue:'Vancouver'},
+  // ── CUARTOS DE FINAL — 4 partidos ──
+  {id:97, phase:'Cuartos',group:'',date:'9 jul',  home:'Ganador Oct-1', away:'Ganador Oct-2', venue:'Boston'},
+  {id:98, phase:'Cuartos',group:'',date:'10 jul', home:'Ganador Oct-3', away:'Ganador Oct-4', venue:'Los Ángeles'},
+  {id:99, phase:'Cuartos',group:'',date:'11 jul', home:'Ganador Oct-5', away:'Ganador Oct-6', venue:'Miami'},
+  {id:100,phase:'Cuartos',group:'',date:'11 jul', home:'Ganador Oct-7', away:'Ganador Oct-8', venue:'Kansas City'},
+  // ── SEMIFINALES — 2 partidos ──
+  {id:101,phase:'Semifinales',group:'',date:'14 jul',home:'Ganador CF-1', away:'Ganador CF-2', venue:'Dallas'},
+  {id:102,phase:'Semifinales',group:'',date:'15 jul',home:'Ganador CF-3', away:'Ganador CF-4', venue:'Atlanta'},
+  // ── 3° PUESTO ──
+  {id:103,phase:'3° puesto',group:'',date:'18 jul',home:'Perdedor SF-1', away:'Perdedor SF-2', venue:'Miami'},
+  // ── FINAL ──
+  {id:104,phase:'Final',group:'',date:'19 jul',home:'Ganador SF-1', away:'Ganador SF-2', venue:'Nueva York/NJ'},
 ];
 
 // ── MOTOR DE POSICIONES ───────────────────────────────────────────────
@@ -852,7 +851,7 @@ function matchCard(m,myBets,limit){
     const chipHtml=br==='win'?`<span class="bet-result-chip chip-win">✓ Ganaste</span>`:br==='lose'?`<span class="bet-result-chip chip-lose">✗ Perdiste</span>`:`<span class="bet-result-chip chip-pending">Pendiente</span>`;
     betSection=`<div class="bet-placed"><div class="bet-placed-left"><i class="ti ti-circle-check"></i> $${fmt(bet.amount)} · ${bet.pick}</div>${chipHtml}</div>`;
   } else if(groupBlocked){
-    betSection=`<div class="bet-placed" style="color:var(--text3)"><i class="ti ti-lock"></i> Apuesta por partido no disponible en el Grupo ${m.group}</div>`;
+    betSection=`<div class="bet-blocked"><i class="ti ti-ban"></i> Apuestas por partido no habilitadas en el Grupo ${m.group}</div>`;
   } else if(!res||res.status==='NS'){
     betSection=`<div class="bet-area">
       <select class="bet-select" id="pick-${m.id}"><option>Gana ${m.home}</option><option>Empate</option><option>Gana ${m.away}</option></select>
@@ -889,7 +888,15 @@ function liveValidate(id,limit){
   if(btn)btn.disabled=over||val<1;
 }
 function placeBet(matchId,limit){
+  const m=MATCHES.find(x=>x.id===matchId);
+  if(!m){return;}
+  // Validación de seguridad: bloquear apuesta por partido en grupos no habilitados
+  if(m.phase==='Grupos' && !BETTABLE_GROUPS.includes(m.group)){
+    alert('No se pueden hacer apuestas por partido en el Grupo '+m.group+'.');
+    return;
+  }
   const pickEl=document.getElementById('pick-'+matchId),amtEl=document.getElementById('amt-'+matchId);
+  if(!pickEl||!amtEl){return;}
   const amount=parseInt(amtEl.value)||0;
   if(amount<1){alert('Ingresá un monto válido.');return;}
   if(amount>limit){alert(`⚠️ Máximo $${fmt(limit)} en esta fase.`);return;}
