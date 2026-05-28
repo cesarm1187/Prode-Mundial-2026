@@ -254,6 +254,19 @@ option{background:#1C2537}
 .thirds-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
 .thirds-row.q{color:#6EE7B7}.thirds-row.nq{color:var(--text3)}
 .thirds-rank{width:20px;font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--text3)}
+.rank-card{background:rgba(17,24,39,.85);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden}
+.rank-row{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.04)}
+.rank-row:last-child{border-bottom:0}
+.rank-row.me{background:rgba(245,197,24,.06)}
+.rank-pos{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:17px;flex-shrink:0;background:rgba(255,255,255,.08);color:var(--text2)}
+.rank-pos.gold{background:#F5C518;color:#0A0E1A}.rank-pos.silver{background:#C0C5CE;color:#0A0E1A}.rank-pos.bronze{background:#B87333;color:#fff}
+.rank-name{flex:1;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.rank-name .you-tag{font-size:10px;background:rgba(245,197,24,.2);color:var(--gold);padding:2px 7px;border-radius:50px;font-weight:700;letter-spacing:.5px}
+.rank-stats{display:flex;gap:16px;align-items:center}
+.rank-stat{text-align:center}
+.rank-stat .v{font-family:'Bebas Neue',sans-serif;font-size:20px;line-height:1}
+.rank-stat .v.win{color:#6EE7B7}.rank-stat .v.gold{color:var(--gold)}
+.rank-stat .l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
 
 </style>
 </head>
@@ -326,6 +339,7 @@ option{background:#1C2537}
     <div class="tab active" data-tab="fixture" onclick="switchTab('fixture')"><i class="ti ti-calendar-event"></i> Fixture</div>
     <div class="tab" data-tab="simulador" onclick="switchTab('simulador')"><i class="ti ti-list-numbers"></i> Simulador</div>
     <div class="tab" data-tab="grupos" onclick="switchTab('grupos')"><i class="ti ti-table"></i> Posiciones</div>
+    <div class="tab" data-tab="ranking" onclick="switchTab('ranking')"><i class="ti ti-trophy"></i> Ranking</div>
     <div class="tab" data-tab="mis-apuestas" onclick="switchTab('mis-apuestas')"><i class="ti ti-coin"></i> Mis apuestas</div>
     <div class="tab" data-tab="limites" onclick="switchTab('limites')"><i class="ti ti-chart-bar"></i> Límites</div>
     <div class="tab hidden" data-tab="admin" id="tab-admin" onclick="switchTab('admin')"><i class="ti ti-shield-check"></i> Admin</div>
@@ -351,7 +365,7 @@ option{background:#1C2537}
     <div id="tab-simulador" class="hidden">
       <div class="sim-intro">
         <i class="ti ti-info-circle" style="font-size:14px"></i>
-        <span>Elegí <strong>1°, 2° y 3°</strong> de cada grupo. Ganás la apuesta si acertás los tres y tu 3° clasifica entre los <strong>8 mejores terceros</strong>. Cada apuesta cuesta <strong>$${'20.000'}</strong> y podés hacer varias por grupo.</span>
+        <span>Elegí <strong>1°, 2° y 3°</strong> de cada grupo. Ganás la apuesta si acertás los tres y tu 3° clasifica entre los <strong>8 mejores terceros</strong>. Cada apuesta cuesta <strong>$20.000</strong> y podés hacer varias por grupo.</span>
       </div>
       <div id="sim-groups"></div>
     </div>
@@ -361,6 +375,12 @@ option{background:#1C2537}
       <div class="sim-intro"><i class="ti ti-table" style="font-size:14px"></i><span>Las posiciones se actualizan automáticamente con los resultados cargados. <strong>3</strong> por victoria, <strong>1</strong> por empate, <strong>0</strong> por derrota.</span></div>
       <div id="standings-grid"></div>
       <div id="best-thirds-box"></div>
+    </div>
+
+    <!-- RANKING DE USUARIOS -->
+    <div id="tab-ranking" class="hidden">
+      <div class="sim-intro"><i class="ti ti-trophy" style="font-size:14px"></i><span>Ranking de jugadores por apuestas ganadas. Se cuentan las apuestas por partido y las del simulador de grupos que ya están definidas.</span></div>
+      <div id="ranking-list"></div>
     </div>
 
     <!-- LÍMITES -->
@@ -722,13 +742,14 @@ function doLogout(){state.currentUser=null;state.activePhase='Grupos';document.g
 // ---- TABS ----
 function switchTab(t){
   document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active',el.dataset.tab===t));
-  ['fixture','simulador','grupos','mis-apuestas','limites','admin-content'].forEach(id=>{
+  ['fixture','simulador','grupos','ranking','mis-apuestas','limites','admin-content'].forEach(id=>{
     const key=id==='admin-content'?'admin':id;
     document.getElementById('tab-'+id).classList.toggle('hidden',t!==key);
   });
   if(t==='mis-apuestas')renderBets();
   if(t==='simulador')renderSimulator();
   if(t==='grupos')renderStandings();
+  if(t==='ranking')renderRanking();
   if(t==='admin'){renderAdmin();switchAdminSection('resultados');}
 }
 function switchAdminSection(s){
@@ -1014,6 +1035,54 @@ function renderStandings(){
   }
 }
 
+// ── RANKING DE USUARIOS ───────────────────────────────────────────────
+function renderRanking(){
+  const el=document.getElementById('ranking-list');
+  const stats=regularUsers().map(u=>{
+    let won=0,lost=0,pending=0,winnings=0,wagered=0;
+    // apuestas por partido
+    Object.values(state.bets[u.user]||{}).forEach(b=>{
+      wagered+=b.amount;
+      const r=getBetResult(b.matchId,b);
+      if(r==='win'){won++;winnings+=b.amount;}
+      else if(r==='lose')lost++;
+      else pending++;
+    });
+    // apuestas de simulador
+    (state.groupBets[u.user]||[]).forEach(b=>{
+      wagered+=b.amount;
+      const ev=evalGroupBet(b);
+      if(ev==='win'){won++;winnings+=b.amount;}
+      else if(ev==='lose')lost++;
+      else pending++;
+    });
+    return {user:u.user,won,lost,pending,winnings,wagered};
+  });
+  // orden: más ganancias, luego más ganadas, luego menos apostado
+  stats.sort((a,b)=>b.winnings-a.winnings||b.won-a.won||a.wagered-b.wagered);
+
+  if(!stats.length){el.innerHTML='<div class="empty-state" style="padding:2rem"><i class="ti ti-trophy"></i><p>Todavía no hay jugadores registrados.</p></div>';return;}
+
+  const me=state.currentUser.user;
+  let html='<div class="rank-card">';
+  stats.forEach((s,i)=>{
+    const pos=i+1;
+    const medal=pos===1?'gold':pos===2?'silver':pos===3?'bronze':'';
+    const isMe=s.user===me;
+    html+=`<div class="rank-row${isMe?' me':''}">
+      <div class="rank-pos ${medal}">${pos}</div>
+      <div class="rank-name">${s.user}${isMe?'<span class="you-tag">VOS</span>':''}</div>
+      <div class="rank-stats">
+        <div class="rank-stat"><div class="v gold">$${fmt(s.winnings)}</div><div class="l">Ganado</div></div>
+        <div class="rank-stat"><div class="v win">${s.won}</div><div class="l">Aciertos</div></div>
+        <div class="rank-stat"><div class="v" style="color:var(--text3)">${s.pending}</div><div class="l">Pend.</div></div>
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+
 
 function renderBets(){
   const list=Object.values(getUserBets());
@@ -1097,6 +1166,7 @@ function renderBets(){
 function refreshGroupViews(){
   if(!document.getElementById('tab-grupos').classList.contains('hidden'))renderStandings();
   if(!document.getElementById('tab-simulador').classList.contains('hidden'))renderSimulator();
+  if(!document.getElementById('tab-ranking').classList.contains('hidden'))renderRanking();
 }
 
 // ---- NOTIFICACIONES Y MODO INTERNO ----
