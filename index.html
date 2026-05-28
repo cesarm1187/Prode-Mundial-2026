@@ -87,8 +87,7 @@ input,select,button,textarea{font-family:'Barlow',sans-serif}
 .match-venue-tag{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px}
 .teams-row{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .team-block{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px}
-.team-flag{width:52px;height:36px;border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.04)}
-.flag-img{width:52px;height:34px;object-fit:cover;border-radius:3px;display:block}
+.team-flag{width:54px;height:36px;border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,.15)}
 .flag-fb{width:52px;height:34px;border-radius:3px;background:#1C2537;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#94A3B8;letter-spacing:1px}
 .team-name{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;text-align:center;color:var(--text)}
 .vs-block{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0}
@@ -384,19 +383,15 @@ const FLAG_CODES={
   'Portugal':'pt','RD Congo':'cd','Uzbekistán':'uz','Colombia':'co',
   'Inglaterra':'gb-eng','Croacia':'hr','Ghana':'gh','Panamá':'pa',
 };
-function flagFallback(el,initials){
-  var d=document.createElement('div');
-  d.className='flag-fb';
-  d.textContent=initials;
-  el.parentNode.replaceChild(d,el);
-}
 function flag(name){
   const code=FLAG_CODES[name];
-  const words=name.replace('EE. UU.','USA').replace('RD Congo','RDC').replace('Costa de Marfil','CDM').split(/[\s\-.]+/g);
-  const initials=words.map(w=>w[0]||'').join('').toUpperCase().slice(0,3);
-  if(!code) return '<div class="flag-fb">'+initials+'</div>';
-  return '<img src="https://flagcdn.com/w80/'+code+'.png" alt="'+name+'" class="flag-img" loading="lazy" onerror="flagFallback(this,''+initials+'')">';
+  const abbr={'EE. UU.':'USA','RD Congo':'RDC','Costa de Marfil':'CDM','Países Bajos':'NED','Nueva Zelanda':'NZL','Arabia Saudita':'KSA','Corea del Sur':'KOR','Rep. Checa':'CZE','Bosnia-Herzegovina':'BIH'};
+  const ini=(abbr[name]||name.split(/[\s\-\.]+/).map(function(w){return w[0]||'';}).join('')).toUpperCase().slice(0,3);
+  if(!code) return '<div class="flag-fb">'+ini+'</div>';
+  return '<div class="flag-img-wrap" style="background:url(https://flagcdn.com/w80/'+code+'.png) center/cover no-repeat #1C2537;width:52px;height:34px;border-radius:3px"></div>';
 }
+
+const MATCHES
 
 const MATCHES=[
   // ── GRUPO A ───────────────────────────────────
