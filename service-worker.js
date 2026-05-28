@@ -1,4 +1,4 @@
-const CACHE_NAME='prode-mundial-v9-fixture';
+const CACHE_NAME='prode-mundial-v10-fixture';
 const APP_ASSETS=['./','./index.html','./manifest.json','./icons/icon-192.png','./icons/icon-512.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(APP_ASSETS)));

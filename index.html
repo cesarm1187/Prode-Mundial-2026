@@ -87,7 +87,7 @@ input,select,button,textarea{font-family:'Barlow',sans-serif}
 .match-venue-tag{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px}
 .teams-row{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .team-block{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px}
-.team-flag{width:52px;height:36px;border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:28px;line-height:1}
+.team-flag{width:52px;height:36px;border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.04)}
 .team-name{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;text-align:center;color:var(--text)}
 .vs-block{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0}
 .vs-text{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text3);letter-spacing:2px}
@@ -284,7 +284,7 @@ option{background:#1C2537}
   </div>
   <div class="content">
     <div class="stats-bar">
-      <div class="stat-card"><div class="stat-val" id="stat-partidos">104</div><div class="stat-lbl">Partidos</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-partidos">0</div><div class="stat-lbl">Partidos</div></div>
       <div class="stat-card"><div class="stat-val" id="stat-apuestas">0</div><div class="stat-lbl">Mis apuestas</div></div>
       <div class="stat-card"><div class="stat-val" id="stat-total">$0</div><div class="stat-lbl">Total apostado</div></div>
     </div>
@@ -368,161 +368,132 @@ const MAX_REGULAR=10;
 const PHASE_LIMITS={'Grupos':5000,'Ronda de 32':5000,'Ronda de 16':5000,'Octavos':10000,'Cuartos':20000,'Semifinales':30000,'3° puesto':40000,'Final':50000};
 const PHASES=['Grupos','Ronda de 32','Ronda de 16','Octavos','Cuartos','Semifinales','3° puesto','Final'];
 
-const FLAGS={
-  'México':'🇲🇽','Brasil':'🇧🇷','Sudáfrica':'🇿🇦','Corea del Sur':'🇰🇷','Rep. Checa':'🇨🇿',
-  'Canadá':'🇨🇦','Bosnia-Herzegovina':'🇧🇦','Qatar':'🇶🇦','Suiza':'🇨🇭',
-  'Marruecos':'🇲🇦','Perú':'🇵🇪','Haití':'🇭🇹','Escocia':'🏴󠁧󠁢󠁳󠁣󠁴󠁿',
-  'EE. UU.':'🇺🇸','Paraguay':'🇵🇾','Australia':'🇦🇺','Turquía':'🇹🇷',
-  'Alemania':'🇩🇪','Curazao':'🇨🇼','Costa de Marfil':'🇨🇮','Ecuador':'🇪🇨',
-  'Países Bajos':'🇳🇱','Japón':'🇯🇵','Túnez':'🇹🇳','Serbia':'🇷🇸',
-  'Bélgica':'🇧🇪','Egipto':'🇪🇬','Irán':'🇮🇷','Nueva Zelanda':'🇳🇿',
-  'España':'🇪🇸','Cabo Verde':'🇨🇻','Arabia Saudita':'🇸🇦','Uruguay':'🇺🇾',
-  'Francia':'🇫🇷','Senegal':'🇸🇳','Noruega':'🇳🇴','Argentina':'🇦🇷',
-  'Argelia':'🇩🇿','Austria':'🇦🇹','Jordania':'🇯🇴','Portugal':'🇵🇹',
-  'Colombia':'🇨🇴','Camerún':'🇨🇲','Inglaterra':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','Panamá':'🇵🇦',
-  'Dinamarca':'🇩🇰','Ghana':'🇬🇭','Suecia':'🇸🇪','Irak':'🇮🇶','RD Congo':'🇨🇩','Uzbekistán':'🇺🇿','Croacia':'🇭🇷',
+const FLAG_CODES={
+  'México':'mx','Sudáfrica':'za','Corea del Sur':'kr','Rep. Checa':'cz',
+  'Canadá':'ca','Bosnia-Herzegovina':'ba','Qatar':'qa','Suiza':'ch',
+  'Brasil':'br','Marruecos':'ma','Haití':'ht','Escocia':'gb-sct',
+  'EE. UU.':'us','Paraguay':'py','Australia':'au','Turquía':'tr',
+  'Alemania':'de','Curazao':'cw','Costa de Marfil':'ci','Ecuador':'ec',
+  'Países Bajos':'nl','Japón':'jp','Suecia':'se','Túnez':'tn',
+  'Bélgica':'be','Egipto':'eg','Irán':'ir','Nueva Zelanda':'nz',
+  'España':'es','Cabo Verde':'cv','Arabia Saudita':'sa','Uruguay':'uy',
+  'Francia':'fr','Senegal':'sn','Irak':'iq','Noruega':'no',
+  'Argentina':'ar','Argelia':'dz','Austria':'at','Jordania':'jo',
+  'Portugal':'pt','RD Congo':'cd','Uzbekistán':'uz','Colombia':'co',
+  'Inglaterra':'gb-eng','Croacia':'hr','Ghana':'gh','Panamá':'pa',
 };
-function flag(name){return FLAGS[name]||'🏳️';}
+function flag(name){
+  const code=FLAG_CODES[name];
+  const words=name.replace('EE. UU.','USA').replace('RD Congo','RDC').replace('Costa de Marfil','CDM').split(/[\s\-\.]+/g);
+  const initials=words.map(w=>w[0]||'').join('').toUpperCase().slice(0,3);
+  const fb=`<div style="width:52px;height:34px;border-radius:3px;background:#1C2537;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#94A3B8;letter-spacing:1px">${initials}</div>`;
+  if(!code) return fb;
+  return `<img src="https://flagcdn.com/w80/${code}.png" alt="${name}" style="width:52px;height:34px;object-fit:cover;border-radius:3px;display:block" loading="lazy" onerror="this.replaceWith(document.createRange().createContextualFragment('${fb}'))">`;
+}
 
 const MATCHES=[
-  // ── GRUPO A ───────────────────────────────────────────────────────────
-  // Fecha 1
-  {id:1, phase:'Grupos',group:'A',date:'11 jun',home:'México',         away:'Sudáfrica',          venue:'Ciudad de México'},
-  {id:2, phase:'Grupos',group:'A',date:'11 jun',home:'Corea del Sur',  away:'Rep. Checa',         venue:'Guadalajara'},
-  // Fecha 2
-  {id:3, phase:'Grupos',group:'A',date:'18 jun',home:'Rep. Checa',     away:'Sudáfrica',          venue:'Atlanta'},
-  {id:4, phase:'Grupos',group:'A',date:'18 jun',home:'México',         away:'Corea del Sur',      venue:'Guadalajara'},
-  // Fecha 3
-  {id:5, phase:'Grupos',group:'A',date:'24 jun',home:'Rep. Checa',     away:'México',             venue:'Ciudad de México'},
-  {id:6, phase:'Grupos',group:'A',date:'24 jun',home:'Sudáfrica',      away:'Corea del Sur',      venue:'Guadalajara'},
-  // ── GRUPO B ───────────────────────────────────────────────────────────
-  // Fecha 1
-  {id:7, phase:'Grupos',group:'B',date:'12 jun',home:'Canadá',         away:'Bosnia-Herzegovina', venue:'Toronto'},
-  {id:8, phase:'Grupos',group:'B',date:'13 jun',home:'Qatar',          away:'Suiza',              venue:'San Francisco'},
-  // Fecha 2
-  {id:9, phase:'Grupos',group:'B',date:'18 jun',home:'Suiza',          away:'Bosnia-Herzegovina', venue:'Los Ángeles'},
-  {id:10,phase:'Grupos',group:'B',date:'18 jun',home:'Canadá',         away:'Qatar',              venue:'Vancouver'},
-  // Fecha 3
-  {id:11,phase:'Grupos',group:'B',date:'24 jun',home:'Suiza',          away:'Canadá',             venue:'Vancouver'},
-  {id:12,phase:'Grupos',group:'B',date:'24 jun',home:'Bosnia-Herzegovina',away:'Qatar',           venue:'Seattle'},
-  // ── GRUPO C ───────────────────────────────────────────────────────────
-  // Fecha 1
-  {id:13,phase:'Grupos',group:'C',date:'13 jun',home:'Brasil',         away:'Marruecos',          venue:'Nueva York/NJ'},
-  {id:14,phase:'Grupos',group:'C',date:'13 jun',home:'Haití',          away:'Escocia',            venue:'Boston'},
-  // Fecha 2
-  {id:15,phase:'Grupos',group:'C',date:'19 jun',home:'Escocia',        away:'Marruecos',          venue:'Boston'},
-  {id:16,phase:'Grupos',group:'C',date:'19 jun',home:'Brasil',         away:'Haití',              venue:'Filadelfia'},
-  // Fecha 3
-  {id:17,phase:'Grupos',group:'C',date:'24 jun',home:'Escocia',        away:'Brasil',             venue:'Miami'},
-  {id:18,phase:'Grupos',group:'C',date:'24 jun',home:'Marruecos',      away:'Haití',              venue:'Atlanta'},
-  // ── GRUPO D ───────────────────────────────────────────────────────────
-  // Fecha 1
-  {id:19,phase:'Grupos',group:'D',date:'12 jun',home:'EE. UU.',        away:'Paraguay',           venue:'Los Ángeles'},
-  {id:20,phase:'Grupos',group:'D',date:'13 jun',home:'Australia',      away:'Turquía',            venue:'Vancouver'},
-  // Fecha 2
-  {id:21,phase:'Grupos',group:'D',date:'19 jun',home:'EE. UU.',        away:'Australia',          venue:'Seattle'},
-  {id:22,phase:'Grupos',group:'D',date:'19 jun',home:'Turquía',        away:'Paraguay',           venue:'San Francisco'},
-  // Fecha 3
-  {id:23,phase:'Grupos',group:'D',date:'25 jun',home:'Turquía',        away:'EE. UU.',            venue:'Los Ángeles'},
-  {id:24,phase:'Grupos',group:'D',date:'25 jun',home:'Paraguay',       away:'Australia',          venue:'San Francisco'},
-  // ── GRUPO E ───────────────────────────────────────────────────────────
-  // Fecha 1
-  {id:25,phase:'Grupos',group:'E',date:'14 jun',home:'Alemania',       away:'Curazao',            venue:'Houston'},
-  {id:26,phase:'Grupos',group:'E',date:'14 jun',home:'Costa de Marfil',away:'Ecuador',            venue:'Filadelfia'},
-  // Fecha 2
-  {id:27,phase:'Grupos',group:'E',date:'20 jun',home:'Alemania',       away:'Costa de Marfil',    venue:'Toronto'},
-  {id:28,phase:'Grupos',group:'E',date:'20 jun',home:'Ecuador',        away:'Curazao',            venue:'Kansas City'},
-  // Fecha 3
-  {id:29,phase:'Grupos',group:'E',date:'25 jun',home:'Ecuador',        away:'Alemania',           venue:'Nueva York/NJ'},
-  {id:30,phase:'Grupos',group:'E',date:'25 jun',home:'Curazao',        away:'Costa de Marfil',    venue:'Filadelfia'},
-  // ── GRUPO F ───────────────────────────────────────────────────────────
-  // Fecha 1
-  {id:31,phase:'Grupos',group:'F',date:'14 jun',home:'Países Bajos',   away:'Japón',              venue:'Dallas'},
-  {id:32,phase:'Grupos',group:'F',date:'14 jun',home:'Suecia',         away:'Túnez',              venue:'Monterrey'},
-  // Fecha 2
-  {id:33,phase:'Grupos',group:'F',date:'20 jun',home:'Países Bajos',   away:'Suecia',             venue:'Houston'},
-  {id:34,phase:'Grupos',group:'F',date:'20 jun',home:'Túnez',          away:'Japón',              venue:'Monterrey'},
-  // Fecha 3
-  {id:35,phase:'Grupos',group:'F',date:'25 jun',home:'Japón',          away:'Suecia',             venue:'Dallas'},
-  {id:36,phase:'Grupos',group:'F',date:'25 jun',home:'Túnez',          away:'Países Bajos',       venue:'Kansas City'},
-  // ── GRUPO G ───────────────────────────────────────────────────────────
-  // Fecha 1
-  {id:37,phase:'Grupos',group:'G',date:'15 jun',home:'Bélgica',        away:'Egipto',             venue:'Seattle'},
-  {id:38,phase:'Grupos',group:'G',date:'15 jun',home:'Irán',           away:'Nueva Zelanda',      venue:'Los Ángeles'},
-  // Fecha 2
-  {id:39,phase:'Grupos',group:'G',date:'21 jun',home:'Bélgica',        away:'Irán',               venue:'Los Ángeles'},
-  {id:40,phase:'Grupos',group:'G',date:'21 jun',home:'Nueva Zelanda',  away:'Egipto',             venue:'Vancouver'},
-  // Fecha 3
-  {id:41,phase:'Grupos',group:'G',date:'26 jun',home:'Egipto',         away:'Irán',               venue:'Seattle'},
-  {id:42,phase:'Grupos',group:'G',date:'26 jun',home:'Nueva Zelanda',  away:'Bélgica',            venue:'Vancouver'},
-  // ── GRUPO H ───────────────────────────────────────────────────────────
-  // Fecha 1
-  {id:43,phase:'Grupos',group:'H',date:'15 jun',home:'España',         away:'Cabo Verde',         venue:'Atlanta'},
-  {id:44,phase:'Grupos',group:'H',date:'15 jun',home:'Arabia Saudita', away:'Uruguay',            venue:'Miami'},
-  // Fecha 2
-  {id:45,phase:'Grupos',group:'H',date:'21 jun',home:'España',         away:'Arabia Saudita',     venue:'Atlanta'},
-  {id:46,phase:'Grupos',group:'H',date:'21 jun',home:'Uruguay',        away:'Cabo Verde',         venue:'Miami'},
-  // Fecha 3
-  {id:47,phase:'Grupos',group:'H',date:'26 jun',home:'Cabo Verde',     away:'Arabia Saudita',     venue:'Houston'},
-  {id:48,phase:'Grupos',group:'H',date:'26 jun',home:'Uruguay',        away:'España',             venue:'Guadalajara'},
-  // ── GRUPO I ───────────────────────────────────────────────────────────
-  // Fecha 1
-  {id:49,phase:'Grupos',group:'I',date:'16 jun',home:'Francia',        away:'Senegal',            venue:'Nueva York/NJ'},
-  {id:50,phase:'Grupos',group:'I',date:'16 jun',home:'Irak',           away:'Noruega',            venue:'Boston'},
-  // Fecha 2
-  {id:51,phase:'Grupos',group:'I',date:'22 jun',home:'Francia',        away:'Irak',               venue:'Filadelfia'},
-  {id:52,phase:'Grupos',group:'I',date:'22 jun',home:'Noruega',        away:'Senegal',            venue:'Nueva York/NJ'},
-  // Fecha 3
-  {id:53,phase:'Grupos',group:'I',date:'26 jun',home:'Noruega',        away:'Francia',            venue:'Boston'},
-  {id:54,phase:'Grupos',group:'I',date:'26 jun',home:'Senegal',        away:'Irak',               venue:'Toronto'},
-  // ── GRUPO J ───────────────────────────────────────────────────────────
-  // Fecha 1
-  {id:55,phase:'Grupos',group:'J',date:'16 jun',home:'Argentina',      away:'Argelia',            venue:'Kansas City'},
-  {id:56,phase:'Grupos',group:'J',date:'16 jun',home:'Austria',        away:'Jordania',           venue:'San Francisco'},
-  // Fecha 2
-  {id:57,phase:'Grupos',group:'J',date:'22 jun',home:'Argentina',      away:'Austria',            venue:'Dallas'},
-  {id:58,phase:'Grupos',group:'J',date:'22 jun',home:'Jordania',       away:'Argelia',            venue:'San Francisco'},
-  // Fecha 3
-  {id:59,phase:'Grupos',group:'J',date:'27 jun',home:'Argelia',        away:'Austria',            venue:'Kansas City'},
-  {id:60,phase:'Grupos',group:'J',date:'27 jun',home:'Jordania',       away:'Argentina',          venue:'Dallas'},
-  // ── GRUPO K ───────────────────────────────────────────────────────────
-  // Fecha 1
-  {id:61,phase:'Grupos',group:'K',date:'17 jun',home:'Portugal',       away:'RD Congo',           venue:'Houston'},
-  {id:62,phase:'Grupos',group:'K',date:'17 jun',home:'Uzbekistán',     away:'Colombia',           venue:'Ciudad de México'},
-  // Fecha 2
-  {id:63,phase:'Grupos',group:'K',date:'23 jun',home:'Portugal',       away:'Uzbekistán',         venue:'Houston'},
-  {id:64,phase:'Grupos',group:'K',date:'23 jun',home:'Colombia',       away:'RD Congo',           venue:'Guadalajara'},
-  // Fecha 3
-  {id:65,phase:'Grupos',group:'K',date:'27 jun',home:'Colombia',       away:'Portugal',           venue:'Miami'},
-  {id:66,phase:'Grupos',group:'K',date:'27 jun',home:'RD Congo',       away:'Uzbekistán',         venue:'Atlanta'},
-  // ── GRUPO L ───────────────────────────────────────────────────────────
-  // Fecha 1
-  {id:67,phase:'Grupos',group:'L',date:'17 jun',home:'Inglaterra',     away:'Croacia',            venue:'Dallas'},
-  {id:68,phase:'Grupos',group:'L',date:'17 jun',home:'Ghana',          away:'Panamá',             venue:'Toronto'},
-  // Fecha 2
-  {id:69,phase:'Grupos',group:'L',date:'23 jun',home:'Inglaterra',     away:'Ghana',              venue:'Boston'},
-  {id:70,phase:'Grupos',group:'L',date:'23 jun',home:'Panamá',         away:'Croacia',            venue:'Toronto'},
-  // Fecha 3
-  {id:71,phase:'Grupos',group:'L',date:'27 jun',home:'Panamá',         away:'Inglaterra',         venue:'Nueva York/NJ'},
-  {id:72,phase:'Grupos',group:'L',date:'27 jun',home:'Croacia',        away:'Ghana',              venue:'Filadelfia'},
-  // ── RONDA DE 32 — 16 partidos ─────────────────────────────────────────
-  {id:73, phase:'Ronda de 32',group:'',date:'28 jun',home:'2° Grupo A',  away:'2° Grupo B',               venue:'Los Ángeles'},
-  {id:74, phase:'Ronda de 32',group:'',date:'29 jun',home:'1° Grupo E',  away:'3° mejor (A/B/C/D/F)',     venue:'Boston'},
-  {id:75, phase:'Ronda de 32',group:'',date:'29 jun',home:'1° Grupo F',  away:'2° Grupo C',               venue:'Guadalajara'},
-  {id:76, phase:'Ronda de 32',group:'',date:'30 jun',home:'2° Grupo E',  away:'2° Grupo I',               venue:'Dallas'},
-  {id:77, phase:'Ronda de 32',group:'',date:'30 jun',home:'1° Grupo I',  away:'3° mejor (C/D/F/G/H)',     venue:'Nueva York/NJ'},
-  {id:78, phase:'Ronda de 32',group:'',date:'30 jun',home:'1° Grupo A',  away:'3° mejor (C/E/F/H/I)',     venue:'Ciudad de México'},
-  {id:79, phase:'Ronda de 32',group:'',date:'1 jul', home:'1° Grupo L',  away:'3° mejor (E/H/I/J/K)',     venue:'Atlanta'},
-  {id:80, phase:'Ronda de 32',group:'',date:'1 jul', home:'1° Grupo G',  away:'3° mejor (A/E/H/I/J)',     venue:'Seattle'},
-  {id:81, phase:'Ronda de 32',group:'',date:'1 jul', home:'1° Grupo D',  away:'3° mejor (B/E/F/I/J)',     venue:'San Francisco'},
-  {id:82, phase:'Ronda de 32',group:'',date:'2 jul', home:'1° Grupo H',  away:'2° Grupo J',               venue:'Los Ángeles'},
-  {id:83, phase:'Ronda de 32',group:'',date:'2 jul', home:'2° Grupo K',  away:'2° Grupo L',               venue:'Toronto'},
-  {id:84, phase:'Ronda de 32',group:'',date:'2 jul', home:'1° Grupo B',  away:'3° mejor (E/F/G/I/J)',     venue:'Vancouver'},
-  {id:85, phase:'Ronda de 32',group:'',date:'3 jul', home:'2° Grupo D',  away:'2° Grupo G',               venue:'Dallas'},
-  {id:86, phase:'Ronda de 32',group:'',date:'3 jul', home:'1° Grupo J',  away:'2° Grupo H',               venue:'Miami'},
-  {id:87, phase:'Ronda de 32',group:'',date:'3 jul', home:'1° Grupo K',  away:'3° mejor (D/E/I/J/L)',     venue:'Kansas City'},
-  {id:88, phase:'Ronda de 32',group:'',date:'4 jul', home:'1° Grupo C',  away:'2° Grupo F',               venue:'Houston'},
-  // ── RONDA DE 16 — 8 partidos ─────────────────────────────────────────
+  // ── GRUPO A ───────────────────────────────────
+  {id:1,  phase:'Grupos',group:'A',date:'11 jun',home:'México',          away:'Sudáfrica',          venue:'Ciudad de México'},
+  {id:2,  phase:'Grupos',group:'A',date:'11 jun',home:'Corea del Sur',   away:'Rep. Checa',         venue:'Guadalajara'},
+  {id:3,  phase:'Grupos',group:'A',date:'18 jun',home:'Rep. Checa',      away:'Sudáfrica',          venue:'Atlanta'},
+  {id:4,  phase:'Grupos',group:'A',date:'18 jun',home:'México',          away:'Corea del Sur',      venue:'Guadalajara'},
+  {id:5,  phase:'Grupos',group:'A',date:'24 jun',home:'Rep. Checa',      away:'México',             venue:'Ciudad de México'},
+  {id:6,  phase:'Grupos',group:'A',date:'24 jun',home:'Sudáfrica',       away:'Corea del Sur',      venue:'Guadalajara'},
+  // ── GRUPO B ───────────────────────────────────
+  {id:7,  phase:'Grupos',group:'B',date:'12 jun',home:'Canadá',          away:'Bosnia-Herzegovina', venue:'Toronto'},
+  {id:8,  phase:'Grupos',group:'B',date:'13 jun',home:'Qatar',           away:'Suiza',              venue:'San Francisco'},
+  {id:9,  phase:'Grupos',group:'B',date:'18 jun',home:'Suiza',           away:'Bosnia-Herzegovina', venue:'Los Ángeles'},
+  {id:10, phase:'Grupos',group:'B',date:'18 jun',home:'Canadá',          away:'Qatar',              venue:'Vancouver'},
+  {id:11, phase:'Grupos',group:'B',date:'24 jun',home:'Suiza',           away:'Canadá',             venue:'Vancouver'},
+  {id:12, phase:'Grupos',group:'B',date:'24 jun',home:'Bosnia-Herzegovina',away:'Qatar',            venue:'Seattle'},
+  // ── GRUPO C ───────────────────────────────────
+  {id:13, phase:'Grupos',group:'C',date:'13 jun',home:'Brasil',          away:'Marruecos',          venue:'Nueva York/NJ'},
+  {id:14, phase:'Grupos',group:'C',date:'13 jun',home:'Haití',           away:'Escocia',            venue:'Boston'},
+  {id:15, phase:'Grupos',group:'C',date:'19 jun',home:'Escocia',         away:'Marruecos',          venue:'Boston'},
+  {id:16, phase:'Grupos',group:'C',date:'19 jun',home:'Brasil',          away:'Haití',              venue:'Filadelfia'},
+  {id:17, phase:'Grupos',group:'C',date:'24 jun',home:'Escocia',         away:'Brasil',             venue:'Miami'},
+  {id:18, phase:'Grupos',group:'C',date:'24 jun',home:'Marruecos',       away:'Haití',              venue:'Atlanta'},
+  // ── GRUPO D ───────────────────────────────────
+  {id:19, phase:'Grupos',group:'D',date:'12 jun',home:'EE. UU.',         away:'Paraguay',           venue:'Los Ángeles'},
+  {id:20, phase:'Grupos',group:'D',date:'13 jun',home:'Australia',       away:'Turquía',            venue:'Vancouver'},
+  {id:21, phase:'Grupos',group:'D',date:'19 jun',home:'EE. UU.',         away:'Australia',          venue:'Seattle'},
+  {id:22, phase:'Grupos',group:'D',date:'19 jun',home:'Turquía',         away:'Paraguay',           venue:'San Francisco'},
+  {id:23, phase:'Grupos',group:'D',date:'25 jun',home:'Turquía',         away:'EE. UU.',            venue:'Los Ángeles'},
+  {id:24, phase:'Grupos',group:'D',date:'25 jun',home:'Paraguay',        away:'Australia',          venue:'San Francisco'},
+  // ── GRUPO E ───────────────────────────────────
+  {id:25, phase:'Grupos',group:'E',date:'14 jun',home:'Alemania',        away:'Curazao',            venue:'Houston'},
+  {id:26, phase:'Grupos',group:'E',date:'14 jun',home:'Costa de Marfil', away:'Ecuador',            venue:'Filadelfia'},
+  {id:27, phase:'Grupos',group:'E',date:'20 jun',home:'Alemania',        away:'Costa de Marfil',    venue:'Toronto'},
+  {id:28, phase:'Grupos',group:'E',date:'20 jun',home:'Ecuador',         away:'Curazao',            venue:'Kansas City'},
+  {id:29, phase:'Grupos',group:'E',date:'25 jun',home:'Ecuador',         away:'Alemania',           venue:'Nueva York/NJ'},
+  {id:30, phase:'Grupos',group:'E',date:'25 jun',home:'Curazao',         away:'Costa de Marfil',    venue:'Filadelfia'},
+  // ── GRUPO F ───────────────────────────────────
+  {id:31, phase:'Grupos',group:'F',date:'14 jun',home:'Países Bajos',    away:'Japón',              venue:'Dallas'},
+  {id:32, phase:'Grupos',group:'F',date:'14 jun',home:'Suecia',          away:'Túnez',              venue:'Monterrey'},
+  {id:33, phase:'Grupos',group:'F',date:'20 jun',home:'Países Bajos',    away:'Suecia',             venue:'Houston'},
+  {id:34, phase:'Grupos',group:'F',date:'20 jun',home:'Túnez',           away:'Japón',              venue:'Monterrey'},
+  {id:35, phase:'Grupos',group:'F',date:'25 jun',home:'Japón',           away:'Suecia',             venue:'Dallas'},
+  {id:36, phase:'Grupos',group:'F',date:'25 jun',home:'Túnez',           away:'Países Bajos',       venue:'Kansas City'},
+  // ── GRUPO G ───────────────────────────────────
+  {id:37, phase:'Grupos',group:'G',date:'15 jun',home:'Bélgica',         away:'Egipto',             venue:'Seattle'},
+  {id:38, phase:'Grupos',group:'G',date:'15 jun',home:'Irán',            away:'Nueva Zelanda',      venue:'Los Ángeles'},
+  {id:39, phase:'Grupos',group:'G',date:'21 jun',home:'Bélgica',         away:'Irán',               venue:'Los Ángeles'},
+  {id:40, phase:'Grupos',group:'G',date:'21 jun',home:'Nueva Zelanda',   away:'Egipto',             venue:'Vancouver'},
+  {id:41, phase:'Grupos',group:'G',date:'26 jun',home:'Egipto',          away:'Irán',               venue:'Seattle'},
+  {id:42, phase:'Grupos',group:'G',date:'26 jun',home:'Nueva Zelanda',   away:'Bélgica',            venue:'Vancouver'},
+  // ── GRUPO H ───────────────────────────────────
+  {id:43, phase:'Grupos',group:'H',date:'15 jun',home:'España',          away:'Cabo Verde',         venue:'Atlanta'},
+  {id:44, phase:'Grupos',group:'H',date:'15 jun',home:'Arabia Saudita',  away:'Uruguay',            venue:'Miami'},
+  {id:45, phase:'Grupos',group:'H',date:'21 jun',home:'España',          away:'Arabia Saudita',     venue:'Atlanta'},
+  {id:46, phase:'Grupos',group:'H',date:'21 jun',home:'Uruguay',         away:'Cabo Verde',         venue:'Miami'},
+  {id:47, phase:'Grupos',group:'H',date:'26 jun',home:'Cabo Verde',      away:'Arabia Saudita',     venue:'Houston'},
+  {id:48, phase:'Grupos',group:'H',date:'26 jun',home:'Uruguay',         away:'España',             venue:'Guadalajara'},
+  // ── GRUPO I ───────────────────────────────────
+  {id:49, phase:'Grupos',group:'I',date:'16 jun',home:'Francia',         away:'Senegal',            venue:'Nueva York/NJ'},
+  {id:50, phase:'Grupos',group:'I',date:'16 jun',home:'Irak',            away:'Noruega',            venue:'Boston'},
+  {id:51, phase:'Grupos',group:'I',date:'22 jun',home:'Francia',         away:'Irak',               venue:'Filadelfia'},
+  {id:52, phase:'Grupos',group:'I',date:'22 jun',home:'Noruega',         away:'Senegal',            venue:'Nueva York/NJ'},
+  {id:53, phase:'Grupos',group:'I',date:'26 jun',home:'Noruega',         away:'Francia',            venue:'Boston'},
+  {id:54, phase:'Grupos',group:'I',date:'26 jun',home:'Senegal',         away:'Irak',               venue:'Toronto'},
+  // ── GRUPO J ───────────────────────────────────
+  {id:55, phase:'Grupos',group:'J',date:'16 jun',home:'Argentina',       away:'Argelia',            venue:'Kansas City'},
+  {id:56, phase:'Grupos',group:'J',date:'16 jun',home:'Austria',         away:'Jordania',           venue:'San Francisco'},
+  {id:57, phase:'Grupos',group:'J',date:'22 jun',home:'Argentina',       away:'Austria',            venue:'Dallas'},
+  {id:58, phase:'Grupos',group:'J',date:'22 jun',home:'Jordania',        away:'Argelia',            venue:'San Francisco'},
+  {id:59, phase:'Grupos',group:'J',date:'27 jun',home:'Argelia',         away:'Austria',            venue:'Kansas City'},
+  {id:60, phase:'Grupos',group:'J',date:'27 jun',home:'Jordania',        away:'Argentina',          venue:'Dallas'},
+  // ── GRUPO K ───────────────────────────────────
+  {id:61, phase:'Grupos',group:'K',date:'17 jun',home:'Portugal',        away:'RD Congo',           venue:'Houston'},
+  {id:62, phase:'Grupos',group:'K',date:'17 jun',home:'Uzbekistán',      away:'Colombia',           venue:'Ciudad de México'},
+  {id:63, phase:'Grupos',group:'K',date:'23 jun',home:'Portugal',        away:'Uzbekistán',         venue:'Houston'},
+  {id:64, phase:'Grupos',group:'K',date:'23 jun',home:'Colombia',        away:'RD Congo',           venue:'Guadalajara'},
+  {id:65, phase:'Grupos',group:'K',date:'27 jun',home:'Colombia',        away:'Portugal',           venue:'Miami'},
+  {id:66, phase:'Grupos',group:'K',date:'27 jun',home:'RD Congo',        away:'Uzbekistán',         venue:'Atlanta'},
+  // ── GRUPO L ───────────────────────────────────
+  {id:67, phase:'Grupos',group:'L',date:'17 jun',home:'Inglaterra',      away:'Croacia',            venue:'Dallas'},
+  {id:68, phase:'Grupos',group:'L',date:'17 jun',home:'Ghana',           away:'Panamá',             venue:'Toronto'},
+  {id:69, phase:'Grupos',group:'L',date:'23 jun',home:'Inglaterra',      away:'Ghana',              venue:'Boston'},
+  {id:70, phase:'Grupos',group:'L',date:'23 jun',home:'Panamá',          away:'Croacia',            venue:'Toronto'},
+  {id:71, phase:'Grupos',group:'L',date:'27 jun',home:'Panamá',          away:'Inglaterra',         venue:'Nueva York/NJ'},
+  {id:72, phase:'Grupos',group:'L',date:'27 jun',home:'Croacia',         away:'Ghana',              venue:'Filadelfia'},
+  // ── RONDA DE 32 ───────────────────────────────
+  {id:73, phase:'Ronda de 32',group:'',date:'28 jun',home:'2° Grupo A',  away:'2° Grupo B',             venue:'Los Ángeles'},
+  {id:74, phase:'Ronda de 32',group:'',date:'29 jun',home:'1° Grupo E',  away:'3° mejor(A/B/C/D/F)',    venue:'Boston'},
+  {id:75, phase:'Ronda de 32',group:'',date:'29 jun',home:'1° Grupo F',  away:'2° Grupo C',             venue:'Guadalajara'},
+  {id:76, phase:'Ronda de 32',group:'',date:'30 jun',home:'2° Grupo E',  away:'2° Grupo I',             venue:'Dallas'},
+  {id:77, phase:'Ronda de 32',group:'',date:'30 jun',home:'1° Grupo I',  away:'3° mejor(C/D/F/G/H)',    venue:'Nueva York/NJ'},
+  {id:78, phase:'Ronda de 32',group:'',date:'30 jun',home:'1° Grupo A',  away:'3° mejor(C/E/F/H/I)',    venue:'Ciudad de México'},
+  {id:79, phase:'Ronda de 32',group:'',date:'1 jul', home:'1° Grupo L',  away:'3° mejor(E/H/I/J/K)',    venue:'Atlanta'},
+  {id:80, phase:'Ronda de 32',group:'',date:'1 jul', home:'1° Grupo G',  away:'3° mejor(A/E/H/I/J)',    venue:'Seattle'},
+  {id:81, phase:'Ronda de 32',group:'',date:'1 jul', home:'1° Grupo D',  away:'3° mejor(B/E/F/I/J)',    venue:'San Francisco'},
+  {id:82, phase:'Ronda de 32',group:'',date:'2 jul', home:'1° Grupo H',  away:'2° Grupo J',             venue:'Los Ángeles'},
+  {id:83, phase:'Ronda de 32',group:'',date:'2 jul', home:'2° Grupo K',  away:'2° Grupo L',             venue:'Toronto'},
+  {id:84, phase:'Ronda de 32',group:'',date:'2 jul', home:'1° Grupo B',  away:'3° mejor(E/F/G/I/J)',    venue:'Vancouver'},
+  {id:85, phase:'Ronda de 32',group:'',date:'3 jul', home:'2° Grupo D',  away:'2° Grupo G',             venue:'Dallas'},
+  {id:86, phase:'Ronda de 32',group:'',date:'3 jul', home:'1° Grupo J',  away:'2° Grupo H',             venue:'Miami'},
+  {id:87, phase:'Ronda de 32',group:'',date:'3 jul', home:'1° Grupo K',  away:'3° mejor(D/E/I/J/L)',    venue:'Kansas City'},
+  {id:88, phase:'Ronda de 32',group:'',date:'4 jul', home:'1° Grupo C',  away:'2° Grupo F',             venue:'Houston'},
+  // ── RONDA DE 16 ───────────────────────────────
   {id:89, phase:'Ronda de 16',group:'',date:'5 jul', home:'Ganador R32-1', away:'Ganador R32-2',  venue:'Houston'},
   {id:90, phase:'Ronda de 16',group:'',date:'5 jul', home:'Ganador R32-3', away:'Ganador R32-4',  venue:'Filadelfia'},
   {id:91, phase:'Ronda de 16',group:'',date:'6 jul', home:'Ganador R32-5', away:'Ganador R32-6',  venue:'Nueva York/NJ'},
@@ -531,18 +502,21 @@ const MATCHES=[
   {id:94, phase:'Ronda de 16',group:'',date:'7 jul', home:'Ganador R32-11',away:'Ganador R32-12', venue:'Seattle'},
   {id:95, phase:'Ronda de 16',group:'',date:'8 jul', home:'Ganador R32-13',away:'Ganador R32-14', venue:'Atlanta'},
   {id:96, phase:'Ronda de 16',group:'',date:'8 jul', home:'Ganador R32-15',away:'Ganador R32-16', venue:'Vancouver'},
-  // ── CUARTOS DE FINAL — 4 partidos ────────────────────────────────────
+  // ── OCTAVOS ───────────────────────────────────
   {id:97, phase:'Octavos',group:'',date:'9 jul',  home:'Ganador R16-1', away:'Ganador R16-2', venue:'Boston'},
   {id:98, phase:'Octavos',group:'',date:'10 jul', home:'Ganador R16-3', away:'Ganador R16-4', venue:'Los Ángeles'},
   {id:99, phase:'Octavos',group:'',date:'11 jul', home:'Ganador R16-5', away:'Ganador R16-6', venue:'Miami'},
   {id:100,phase:'Octavos',group:'',date:'11 jul', home:'Ganador R16-7', away:'Ganador R16-8', venue:'Kansas City'},
-  // ── SEMIFINALES — 2 partidos ─────────────────────────────────────────
-  {id:101,phase:'Semifinales',group:'',date:'14 jul',home:'Ganador CF-1', away:'Ganador CF-2', venue:'Dallas'},
-  {id:102,phase:'Semifinales',group:'',date:'15 jul',home:'Ganador CF-3', away:'Ganador CF-4', venue:'Atlanta'},
-  // ── 3° PUESTO ────────────────────────────────────────────────────────
-  {id:103,phase:'3° puesto',group:'',date:'18 jul',home:'Perdedor SF-1',away:'Perdedor SF-2', venue:'Miami'},
-  // ── FINAL ────────────────────────────────────────────────────────────
-  {id:104,phase:'Final',group:'',date:'19 jul',home:'Ganador SF-1', away:'Ganador SF-2',      venue:'Nueva York/NJ'},
+  // ── CUARTOS ───────────────────────────────────
+  {id:101,phase:'Cuartos',group:'',date:'14 jul',home:'Ganador Oct-1', away:'Ganador Oct-2', venue:'Dallas'},
+  {id:102,phase:'Cuartos',group:'',date:'15 jul',home:'Ganador Oct-3', away:'Ganador Oct-4', venue:'Atlanta'},
+  // ── SEMIFINALES ───────────────────────────────
+  {id:103,phase:'Semifinales',group:'',date:'14 jul',home:'Ganador CF-1',away:'Ganador CF-2', venue:'Dallas'},
+  {id:104,phase:'Semifinales',group:'',date:'15 jul',home:'Ganador CF-3',away:'Ganador CF-4', venue:'Atlanta'},
+  // ── 3° PUESTO ─────────────────────────────────
+  {id:105,phase:'3° puesto',group:'',date:'18 jul',home:'Perdedor SF-1',away:'Perdedor SF-2', venue:'Miami'},
+  // ── FINAL ─────────────────────────────────────
+  {id:106,phase:'Final',group:'',date:'19 jul',home:'Ganador SF-1',  away:'Ganador SF-2',    venue:'Nueva York/NJ'},
 ];
 
 // STATE
@@ -605,6 +579,7 @@ function doLogin(){
     document.getElementById('topbar-avatar').textContent=found.user.slice(0,2).toUpperCase();
     document.getElementById('tab-admin').classList.toggle('hidden',found.role!=='admin');
     renderLimitsTable();renderAll();switchTab('fixture');
+    document.getElementById('stat-partidos').textContent=MATCHES.length;
   }
 }
 document.getElementById('login-user').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
@@ -815,7 +790,7 @@ function renderBets(){
       const scoreStr=res&&res.status==='FT'?` · ${res.home}-${res.away}`:'';
       html+=`<div class="bet-summary-card">
         <div style="display:flex;align-items:center;gap:12px;flex:1">
-          <div style="font-size:26px">${flag(m.home)}</div>
+          <div style="width:36px;height:26px;border-radius:3px;overflow:hidden;flex-shrink:0">${flag(m.home)}</div>
           <div style="flex:1">
             <div class="bet-match-title">${m.home} vs ${m.away}${scoreStr}</div>
             <div class="bet-meta"><i class="ti ti-calendar" style="font-size:12px"></i> ${m.date}${scoreStr?'':' · '+m.venue}</div>
@@ -1034,7 +1009,7 @@ function renderAllBets(){
     const chipHtml=br==='win'?`<span class="bet-result-chip chip-win">✓ Ganó</span>`:br==='lose'?`<span class="bet-result-chip chip-lose">✗ Perdió</span>`:`<span class="bet-result-chip chip-pending">Pendiente</span>`;
     return `<div class="bet-summary-card">
       <div style="display:flex;align-items:center;gap:10px;flex:1">
-        <div style="font-size:22px">${flag(r.m.home)}</div>
+        <div style="width:36px;height:26px;border-radius:3px;overflow:hidden;flex-shrink:0">${flag(r.m.home)}</div>
         <div style="flex:1">
           <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--blue);text-transform:uppercase;margin-bottom:2px">${r.user}</div>
           <div class="bet-match-title">${r.m.home} vs ${r.m.away}</div>
